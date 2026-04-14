@@ -1,10 +1,13 @@
-def main():
-    print("Hello from payment!")
+from typing import Any
+from fastapi import FastAPI
+
+from application.api.setup import setup_api
+from application.api.router import root_router
+from application.core.settings import settings
 
 
-if __name__ == "__main__":
-    main()
+params: dict[str, Any] = {'title': settings.app_title, 'version': settings.app_version}
+payment_app: FastAPI = FastAPI(**params)
+prefix: str = f'/api/v{payment_app.version}'
 
-# uv init <project name>
-# uv venv --python /usr/bin/python3.14
-# uv python pin /usr/bin/python3.14
+setup_api(application=payment_app, router=root_router, prefix=prefix)
