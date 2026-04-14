@@ -3,7 +3,7 @@ from fastapi import FastAPI
 
 from application.api.setup import setup_api
 from application.api.router import root_router
-from application.core.settings import settings
+from application.core.config import settings
 
 
 params: dict[str, Any] = {'title': settings.app_title, 'version': settings.app_version}

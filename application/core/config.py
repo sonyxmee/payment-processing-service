@@ -1,7 +1,7 @@
 from typing import ClassVar
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import PostgresDsn
+from pydantic import PostgresDsn, SecretStr
 
 
 class ApplicationSettings(BaseSettings):
@@ -9,6 +9,7 @@ class ApplicationSettings(BaseSettings):
     app_version: str = '1'
 
     database_url: PostgresDsn
+    api_key_hash: SecretStr
 
     model_config: ClassVar[SettingsConfigDict] = SettingsConfigDict(
         env_file='.env',
