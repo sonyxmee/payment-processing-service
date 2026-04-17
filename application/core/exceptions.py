@@ -34,3 +34,29 @@ class UnauthorizedException(CoreException):
 
     status_code = 401
     message = 'Некорректные данные аутентификации'
+
+
+class ObjectNotFoundException(CoreException):
+    """Исключение, возникающее при отсутствии объекта"""
+
+    status_code = 404
+    message = 'Объект с указанным ID не найден'
+
+
+class DatabaseException(CoreException):
+    """Исключение, возникающее при нарушении ограничений в SQLAlchemy"""
+
+    status_code = 400
+    message = 'Ошибка взаимодействия с данными'
+
+    @classmethod
+    def from_message(cls, message: str):
+        """Расширяет сообщение об ошибке"""
+        return cls(message=f'{cls.message}: {message}')
+
+
+class AlreadyExistsException(DatabaseException):
+    """409 Conflict: Для нарушений уникальности."""
+
+    status_code = 409
+    message = 'Объект с такими данными уже существует'
