@@ -1,12 +1,12 @@
 from abc import ABC
 from uuid import UUID
-from pydantic import BaseModel
 from typing import Any, Generic, Tuple
 
 from sqlalchemy import Select, select, Result, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.dml import ReturningUpdate
 
+from application.core.schemas.base import SchemaT
 from application.core.sqlalchemy import handle_db_exceptions
 from application.models.base import ModelT
 
@@ -17,7 +17,7 @@ class BaseRepository(ABC, Generic[ModelT]):
     model: type[ModelT]
 
     @handle_db_exceptions
-    async def create(self, payload: BaseModel, db_session: AsyncSession) -> ModelT:
+    async def create(self, payload: SchemaT, db_session: AsyncSession) -> ModelT:
         """Создаёт запись в базе данных и возвращает её."""
         data: dict[str, Any] = payload.model_dump()
         instance: ModelT = self.model(**data)
@@ -44,7 +44,7 @@ class BaseRepository(ABC, Generic[ModelT]):
     async def update(
         self,
         id_: UUID,
-        payload: BaseModel,
+        payload: SchemaT,
         db_session: AsyncSession,
     ) -> ModelT:
         """Обновляет объект в базе данных и возвращает обновлённую запись."""

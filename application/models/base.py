@@ -1,6 +1,7 @@
+from datetime import datetime
 from typing import TypeVar
 
-from sqlalchemy import text
+from sqlalchemy import DateTime, text, func
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.types import Uuid
@@ -32,6 +33,14 @@ class BaseMixin:
 
     def __repr__(self):
         return f'{type(self).__name__}[{self.id}]'
+
+
+class TimestampMixin:
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        comment='Время создания',
+    )
 
 
 ModelT = TypeVar('ModelT', bound=Base)

@@ -43,6 +43,13 @@ class ObjectNotFoundException(CoreException):
     message = 'Объект с указанным ID не найден'
 
 
+class BadRequestException(CoreException):
+    """Исключение, возникающее при передаче недопустимых данных"""
+
+    status_code = 400
+    message = 'Переданы некорректные данные'
+
+
 class DatabaseException(CoreException):
     """Исключение, возникающее при нарушении ограничений в SQLAlchemy"""
 
