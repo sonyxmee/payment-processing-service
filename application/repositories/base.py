@@ -17,9 +17,9 @@ class BaseRepository(ABC, Generic[ModelT]):
     model: type[ModelT]
 
     @handle_db_exceptions
-    async def create(self, schema: BaseModel, db_session: AsyncSession) -> ModelT:
+    async def create(self, payload: BaseModel, db_session: AsyncSession) -> ModelT:
         """Создаёт запись в базе данных и возвращает её."""
-        data: dict[str, Any] = schema.model_dump()
+        data: dict[str, Any] = payload.model_dump()
         instance: ModelT = self.model(**data)
 
         db_session.add(instance)

@@ -1,0 +1,28 @@
+from abc import ABC
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from application.models.base import ModelT
+from application.repositories.base import BaseRepository
+
+
+class BaseService(ABC):
+    """
+    Базовый класс сервисного слоя.
+    Обеспечивает интерфейс взаимодействия между API и уровнем данных (репозиторием).
+    """
+
+    def __init__(self, repository: type[BaseRepository]):
+        self.repository: BaseRepository = repository()
+
+    async def get_one(self, id_: int, db_session: AsyncSession) -> ModelT:
+        """Метод получения одной записи"""
+        return await self.repository.get_one(id_=id_, db_session=db_session)
+
+    async def create(self, payload: BaseModel, db_session: AsyncSession) -> ModelT:
+        """Метод создания записи"""
+        return await self.repository.create(schema=payload, db_session=db_session)
+
+    async def update(self, id_: int, payload: BaseModel, db_session: AsyncSession) -> ModelT:
+        """Метод обновления записи"""
+        return await self.repository.update(id_=id_, payload=payload, db_session=db_session)
