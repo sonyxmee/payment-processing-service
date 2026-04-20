@@ -1,6 +1,6 @@
 from typing import ClassVar
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import PostgresDsn, SecretStr
+from pydantic import AmqpDsn, PostgresDsn, SecretStr
 
 
 def get_basic_settings_config(env_prefix: str | None = None) -> SettingsConfigDict:
@@ -24,6 +24,7 @@ class ApplicationSettings(BaseSettings):
 
     database: DatabaseSettings
     api_key_hash: SecretStr
+    rabbitmq_url: AmqpDsn
 
     model_config: ClassVar[SettingsConfigDict] = get_basic_settings_config()
 
