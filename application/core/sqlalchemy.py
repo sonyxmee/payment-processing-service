@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError, MultipleResultsFound, NoResultFound, 
 
 from application.core.logger import main_logger as log
 
-from .exceptions import AlreadyExistsException, ObjectNotFoundException, DatabaseException
+from .exceptions import AlreadyExistsException, ConflictException, ObjectNotFoundException, DatabaseException
 
 
 @dataclass
@@ -61,6 +61,20 @@ class SQLAlchemyErrorHandler:
                 column=match.group(1),
                 value='constraint',
                 message='Нарушено бизнес-ограничение данных.',
+            )
+        return error
+
+    @staticmethod
+    def parse_lock_contention(exc: DBAPIError) -> Optional[ErrorDetail]:
+        """Парсинг ошибки блокировки ресурса (55P03)."""
+        lock_not_available_error = '55P03'  # 55P03: lock_not_available
+        sqlstate = getattr(exc.orig, 'pgcode', None) or getattr(exc.orig, 'sqlstate', None)
+        error: ErrorDetail | None = None
+        if sqlstate == lock_not_available_error:
+            error = ErrorDetail(
+                column='resource',
+                value='locked',
+                message='Запись редактируется другим пользователем. Пожалуйста, повторите попытку позже.',
             )
         return error
 
@@ -131,6 +145,14 @@ class DBExceptionHandler:
 
     async def _handle_dbapi_error(self, exc: DBAPIError):
         """Обрабатывает низкоуровневые ошибки драйвера БД."""
+
+        lock: ErrorDetail | None = SQLAlchemyErrorHandler.parse_lock_contention(exc)
+        if lock:
+            log.warning(f'Lock contention: Resource {self.model_name} is busy.')
+            message: str = (
+                'Выбранная запись временно недоступна, так как редактируется другим пользователем. Пожалуйста, повторите попытку позже.'
+            )
+            raise ConflictException(message)
 
         error_msg: str = str(exc.orig)
         error: ErrorDetail | None = SQLAlchemyErrorHandler.parse_value_too_long(error_msg)

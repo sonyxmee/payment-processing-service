@@ -22,3 +22,4 @@ def setup_logging(name: str = settings.app_title):
 
 main_logger: logging.Logger = setup_logging()
 outbox_logger: logging.Logger = setup_logging('outbox')
+consumer_logger: logging.Logger = setup_logging('consumer')

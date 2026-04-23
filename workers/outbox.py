@@ -1,56 +1,62 @@
 import asyncio
-import signal
+import logging
 
+from application.core.constants import EVENTS_EXCHANGE
 from application.core.dependencies import get_db_session
-from application.processors.broker import RabbitMQBroker
+from application.infrastructure.broker import RabbitPublisher
 from application.processors.outbox import OutboxProcessor
 from application.services.dependencies import get_outbox_service
 from application.core.config import settings
-from application.core.logger import outbox_logger as log
+from application.core.logger import outbox_logger
 
-# from .base import run_worker
+from .base import BaseWorker, run_worker
+
+
+class OutboxWorker(BaseWorker):
+    """Воркер для фоновой обработки событий Outbox.
+
+    Реализует паттерн Transactional Outbox: считывает накопленные в БД записи
+    о событиях и публикует их в брокер сообщений, обеспечивая согласованность
+    между состоянием базы данных и внешними системами.
+    """
+
+    def __init__(self, broker, processor: OutboxProcessor, logger: logging.Logger, stop_event: asyncio.Event):
+        """
+        Инициализирует воркер.
+
+        :param broker: Брокер сообщений для отправки событий.
+        :param processor: Процессор, содержащий логику чтения из БД и публикации.
+        :param logger: Логгер для фиксации событий жизненного цикла воркера.
+        """
+
+        super().__init__(broker, logger, stop_event)
+        self.processor = processor
+
+    async def run(self):
+        """Запускает цикл обработки сообщений."""
+        await self.processor.run(db_session_factory=get_db_session)
 
 
 async def main():
-    broker: RabbitMQBroker = RabbitMQBroker(connection_url=settings.rabbitmq_url)
-    await broker.connect()
+    """Точка входа для Outbox воркера."""
 
-    processor = OutboxProcessor(outbox_service=get_outbox_service(), broker=broker)
+    async with RabbitPublisher(settings.rabbitmq_url, exchange_name=EVENTS_EXCHANGE) as publisher:
+        stop_event = asyncio.Event()
+        processor = OutboxProcessor(
+            outbox_service=get_outbox_service(),
+            publisher=publisher,
+            stop_event=stop_event,
+        )
 
-    loop = asyncio.get_running_loop()
+        worker = OutboxWorker(
+            broker=publisher,
+            processor=processor,
+            logger=outbox_logger,
+            stop_event=stop_event,
+        )
 
-    def handle_signal():
-        log.info('Shutdown signal received, initiating graceful stop...')
-        processor.stop()
-
-    for sig in (signal.SIGINT, signal.SIGTERM):
-        loop.add_signal_handler(sig, handle_signal)
-
-    try:
-        log.info('Outbox worker starting...')
-        await processor.run(db_session_factory=get_db_session)
-    except Exception as e:
-        log.critical(f'Outbox Worker crashed unexpectedly: {e}', exc_info=True)
-    finally:
-        log.info('Cleaning up resources...')
-        await broker.close()
-        log.info('Worker stopped cleanly.')
-
-
-# async def main():
-#     broker = RabbitMQBroker(connection_url=settings.rabbitmq_url)
-#     await broker.connect()
-
-#     async def run_logic():
-#         await processor.run(db_session_factory=get_db_session)
-
-#     processor = OutboxProcessor(outbox_service=get_outbox_service(), broker=broker)
-#     await run_worker(stop_callback=processor.stop, run_logic=run_logic, shutdown_logic=broker.close, log=log)
+        await worker.start()
 
 
 if __name__ == '__main__':
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        # Игнорируем, так как сигнал уже обработан внутри
-        pass
+    run_worker(main)

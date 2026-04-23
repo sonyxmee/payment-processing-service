@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import StrEnum
 from typing import TypeVar
 
 from sqlalchemy import DateTime, text, func
@@ -44,3 +45,12 @@ class TimestampMixin:
 
 
 ModelT = TypeVar('ModelT', bound=Base)
+
+
+class RowLockLevel(StrEnum):
+    """Уровни блокировок строк в БД."""
+
+    SHARE = 'share'
+    UPDATE = 'update'
+    NO_KEY_UPDATE = 'no_key_update'
+    KEY_SHARE = 'key_share'

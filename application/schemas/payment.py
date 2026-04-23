@@ -1,13 +1,14 @@
 from uuid import UUID
-from pydantic import Field
+from pydantic import Field, HttpUrl
 from decimal import Decimal
 from typing import Any, Optional, Dict
 
 from application.core.schemas.base import BaseSimpleSchema
-from application.models.payment import Currency
+from application.models.payment import Currency, PaymentStatus
+from application.schemas.outbox import BaseUpdateSchema
 
 
-class PaymentCreatedEvent(BaseSimpleSchema):
+class PaymentCreatedDTO(BaseSimpleSchema):
     """Схема данных события о создании платежа."""
 
     payment_id: UUID = Field(..., description='Уникальный идентификатор созданного платежа')
@@ -26,8 +27,14 @@ class PaymentBaseSchema(BaseSimpleSchema):
     description: Optional[str] = Field(None, max_length=255, description='Описание транзакции')
     metadata_extra: Optional[Dict[str, Any]] = Field(None, description='Дополнительная информация в формате JSON')
     idempotency_key: str = Field(..., min_length=10, max_length=100, description='Ключ идемпотентности')
-    webhook_url: str = Field(..., description='URL для уведомления о результате')
+    webhook_url: HttpUrl = Field(..., description='URL для уведомления о результате')
 
 
 class PaymentCreateSchema(PaymentBaseSchema):
     """Схема для создания нового платежа."""
+
+
+class PaymentUpdateSchema(BaseUpdateSchema):
+    """Схема для обновления существующего платежа."""
+
+    status: Optional[PaymentStatus] = Field(default=None, description='Текущий статус платежа')

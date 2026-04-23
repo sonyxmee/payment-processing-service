@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from application.models.payment import Payment
 from application.repositories.payment import PaymentRepository
 from application.schemas.enums import EventType
-from application.schemas.payment import PaymentCreateSchema, PaymentCreatedEvent
+from application.schemas.payment import PaymentCreateSchema, PaymentCreatedDTO
 
 from .base import BaseService
 from .outbox import OutboxEventService
@@ -25,7 +25,7 @@ class PaymentService(BaseService):
         payment: Payment = await super().create(payload=payload, db_session=db_session)
         await self.outbox_service.create(
             event_type=EventType.PAYMENT_CREATED,
-            payload=PaymentCreatedEvent(payment_id=payment.id),
+            payload=PaymentCreatedDTO(payment_id=payment.id, webhook_url=payment.webhook_url),
             db_session=db_session,
         )
 

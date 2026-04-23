@@ -14,17 +14,12 @@ from .protocols import MessageBroker
 class OutboxProcessor:
     """Отвечает за фоновую отправку исходящих событий в брокер."""
 
-    def __init__(self, outbox_service: OutboxEventService, broker: MessageBroker):
+    def __init__(self, outbox_service: OutboxEventService, broker: MessageBroker, stop_event: asyncio.Event):
 
         self.service: OutboxEventService = outbox_service
         self.broker: MessageBroker = broker
-        self._stop_event = asyncio.Event()
+        self._stop_event = stop_event
         self.max_attempts = OUTBOX_RETRY_LIMIT
-
-    def stop(self):
-        """Инициирует процесс корректной остановки воркера."""
-        log.info('Signal received, stopping Outbox Processor...')
-        self._stop_event.set()
 
     async def run(self, db_session_factory: Callable):
         """Запускает основной цикл обработки событий. Выполняется до получения сигнала остановки."""
