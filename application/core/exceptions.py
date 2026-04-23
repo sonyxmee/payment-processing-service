@@ -1,8 +1,11 @@
+from http import HTTPStatus
+
+
 class CoreException(Exception):
     """Базовое исключение приложения"""
 
     status: str = 'FAIL'
-    status_code: int = 500
+    status_code: int = HTTPStatus.INTERNAL_SERVER_ERROR
     message: str | None = None
     debug_info: str | None = None
 
@@ -32,28 +35,28 @@ class InternalException(CoreException):
 class UnauthorizedException(CoreException):
     """Исключение, возникающее при ошибке аутентификации"""
 
-    status_code = 401
+    status_code = HTTPStatus.UNAUTHORIZED
     message = 'Некорректные данные аутентификации'
 
 
 class ObjectNotFoundException(CoreException):
     """Исключение, возникающее при отсутствии объекта"""
 
-    status_code = 404
+    status_code = HTTPStatus.NOT_FOUND
     message = 'Объект с указанным ID не найден'
 
 
 class BadRequestException(CoreException):
     """Исключение, возникающее при передаче недопустимых данных"""
 
-    status_code = 400
+    status_code = HTTPStatus.BAD_REQUEST
     message = 'Переданы некорректные данные'
 
 
 class DatabaseException(CoreException):
     """Исключение, возникающее при нарушении ограничений в SQLAlchemy"""
 
-    status_code = 400
+    status_code = HTTPStatus.BAD_REQUEST
     message = 'Ошибка взаимодействия с данными'
 
     @classmethod
@@ -65,5 +68,26 @@ class DatabaseException(CoreException):
 class AlreadyExistsException(DatabaseException):
     """409 Conflict: Для нарушений уникальности."""
 
-    status_code = 409
+    status_code = HTTPStatus.CONFLICT
     message = 'Объект с такими данными уже существует'
+
+
+class ConflictException(DatabaseException):
+    """Исключение, возникающее при конфликте доступа к данным (например, блокировка строки)."""
+
+    status_code = HTTPStatus.CONFLICT
+    message = 'Ресурс в данный момент заблокирован или изменен'
+
+
+class PaymentGatewayException(CoreException):
+    """Ошибка при взаимодействии с платежным шлюзом."""
+
+    status_code = HTTPStatus.FAILED_DEPENDENCY
+    message = 'Ошибка взаимодействия с платежным шлюзом'
+
+
+class PaymentWebhookException(CoreException):
+    """Исключение при сбое вебхука."""
+
+    status_code = HTTPStatus.FAILED_DEPENDENCY
+    message = 'Ошибка при отправке вебхука'
