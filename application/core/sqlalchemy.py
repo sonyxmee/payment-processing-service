@@ -10,7 +10,7 @@ from application.core.logger import main_logger as log
 from .exceptions import AlreadyExistsException, ConflictException, ObjectNotFoundException, DatabaseException
 
 
-@dataclass
+@dataclass(slots=True)
 class ErrorDetail:
     """Контейнер для деталей ошибки."""
 

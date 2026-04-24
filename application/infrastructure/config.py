@@ -4,7 +4,7 @@ from application.core.constants import EVENTS_EXCHANGE
 from application.schemas.enums import EventType
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 class RetryLevel:
     """Конфигурация параметров для повторной попытки отправки сообщения."""
 
