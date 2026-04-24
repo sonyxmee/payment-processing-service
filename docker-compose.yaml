@@ -1,7 +1,9 @@
 services:
-  postgers_db:
+  postgres_db:
     image: postgres:16-alpine
     container_name: payment_db
+    ports:
+    - "5440:5432"
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -38,7 +40,7 @@ services:
       DATABASE__DSN: ${DATABASE__DSN}
       RABBITMQ_URL: ${RABBITMQ_URL}
     depends_on:
-      postgers_db: {condition: service_healthy}
+      postgres_db: {condition: service_healthy}
       rabbitmq: {condition: service_healthy}
 
   worker_outbox:
@@ -47,7 +49,7 @@ services:
     command: ["python", "-m", "workers.outbox"] 
     env_file: .env
     depends_on:
-      postgers_db: {condition: service_healthy}
+      postgres_db: {condition: service_healthy}
       rabbitmq: {condition: service_healthy}
 
   worker_payment:
@@ -56,7 +58,7 @@ services:
     command: ["python",  "-m", "workers.payment"]
     env_file: .env
     depends_on:
-      postgers_db: {condition: service_healthy}
+      postgres_db: {condition: service_healthy}
       rabbitmq: {condition: service_healthy}
 
 volumes:

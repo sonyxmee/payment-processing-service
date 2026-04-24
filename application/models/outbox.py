@@ -25,7 +25,12 @@ class OutboxEvent(Base, BaseMixin, TimestampMixin):
     event_type: Mapped[str] = mapped_column(String(100), nullable=False, comment='Тип события')
     payload: Mapped[dict] = mapped_column(JSONB, nullable=False, comment='Данные события')
 
-    status: Mapped[OutboxStatus] = mapped_column(Enum(OutboxStatus), default=OutboxStatus.PENDING, index=True, comment='Статус события')
+    status: Mapped[OutboxStatus] = mapped_column(
+        Enum(OutboxStatus),
+        server_default=OutboxStatus.PENDING.name,
+        index=True,
+        comment='Статус события',
+    )
     processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, comment='Время успешной обработки')
 
     attempts: Mapped[int] = mapped_column(Integer, server_default='0', comment='Количество попыток отправки')

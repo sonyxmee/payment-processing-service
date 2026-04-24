@@ -35,15 +35,15 @@ class Payment(Base, BaseMixin, TimestampMixin):
     )
 
     amount: Mapped[Decimal] = mapped_column(Numeric(precision=10, scale=2), comment='Сумма платежа')
-    currency: Mapped[Currency] = mapped_column(Enum(Currency), server_default=Currency.RUB, comment='Валюта')
+    currency: Mapped[Currency] = mapped_column(Enum(Currency), server_default=Currency.RUB.name, comment='Валюта')
     description: Mapped[str | None] = mapped_column(String(255), comment='Описание транзакции')
     metadata_extra: Mapped[dict | None] = mapped_column(JSONB, comment='Дополнительная информация')
     status: Mapped[PaymentStatus] = mapped_column(
         Enum(PaymentStatus),
-        server_default=PaymentStatus.PENDING,
+        server_default=PaymentStatus.PENDING.name,
         index=True,
         comment='Текущий статус платежа',
-    )  # TODO: передать .value
+    )
     idempotency_key: Mapped[str] = mapped_column(
         String(100),
         unique=True,
