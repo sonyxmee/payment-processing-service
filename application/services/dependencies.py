@@ -12,4 +12,4 @@ def get_outbox_service() -> OutboxEventService:
 
 def get_payment_service() -> PaymentService:
     """Фабрика для создания сервиса платежей."""
-    return PaymentService(repository=PaymentRepository(), outbox_service=get_outbox_service)
+    return PaymentService(repository=PaymentRepository(), outbox_service=get_outbox_service())

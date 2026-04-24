@@ -3,7 +3,9 @@ from pydantic import Field, HttpUrl
 from decimal import Decimal
 from typing import Any, Optional, Dict
 
-from application.core.schemas.base import BaseSimpleSchema
+from application.core.schemas.api import BaseResponseSchema
+from application.core.schemas.base import BaseIdMixin, BaseSimpleSchema, TimestampedMixin
+from application.core.schemas.serializer import DateTimeUTC
 from application.models.payment import Currency, PaymentStatus
 from application.schemas.outbox import BaseUpdateSchema
 
@@ -38,3 +40,15 @@ class PaymentUpdateSchema(BaseUpdateSchema):
     """Схема для обновления существующего платежа."""
 
     status: Optional[PaymentStatus] = Field(default=None, description='Текущий статус платежа')
+
+
+class PaymentViewSchema(PaymentBaseSchema, BaseIdMixin, TimestampedMixin):
+    """Схема для отображения Платежа"""
+
+    completed_at: DateTimeUTC = Field(..., description='Дата и время завершения обработки платежа')
+
+
+class PaymentResponseSchema(BaseResponseSchema):
+    """Схема успешного ответа при выполнении операции над Платежом."""
+
+    result: PaymentViewSchema
