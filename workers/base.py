@@ -23,16 +23,10 @@ class BaseWorker(abc.ABC):
     def _handle_signal(self):
         self.log.info(f'Signal received, stopping {self.__class__.__name__}...')
         self._stop_event.set()
-        self.stop()
 
     @abc.abstractmethod
     async def run(self):
         """Основной метод запуска воркера."""
-        pass
-
-    @abc.abstractmethod
-    def stop(self):
-        """Логика остановки компонентов."""
         pass
 
     async def start(self):

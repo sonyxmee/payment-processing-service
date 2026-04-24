@@ -18,17 +18,6 @@ def get_basic_settings_config(env_prefix: str | None = None) -> SettingsConfigDi
     return SettingsConfigDict(**params)
 
 
-class ApplicationSettings(BaseSettings):
-    app_title: str = 'Payment Service'
-    app_version: str = '1'
-
-    database: DatabaseSettings
-    api_key_hash: SecretStr
-    rabbitmq_url: AmqpDsn
-
-    model_config: ClassVar[SettingsConfigDict] = get_basic_settings_config()
-
-
 class DatabaseSettings(BaseSettings):
     """Настройки подключения к базе данных"""
 
@@ -41,6 +30,19 @@ class DatabaseSettings(BaseSettings):
     pool_timeout: int = 30  # таймаут получения соединения из пула (сек)
 
     model_config: ClassVar[SettingsConfigDict] = get_basic_settings_config(env_prefix='DATABASE')
+
+
+class ApplicationSettings(BaseSettings):
+    """Настройки приложения"""
+
+    app_title: str = 'Payment Service'
+    app_version: str = '1'
+
+    database: DatabaseSettings
+    api_key_hash: SecretStr
+    rabbitmq_url: AmqpDsn
+
+    model_config: ClassVar[SettingsConfigDict] = get_basic_settings_config()
 
 
 settings: ApplicationSettings = ApplicationSettings()

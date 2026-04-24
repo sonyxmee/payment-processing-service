@@ -3,9 +3,10 @@ import json
 from typing import Any
 import aio_pika
 
-from aio_pika.abc import AbstractChannel, AbstractExchange, AbstractQueue, AbstractRobustConnection, AbstractMessage
+from aio_pika.abc import AbstractChannel, AbstractExchange, AbstractQueue, AbstractMessage
 
 from application.handlers.payment import PaymentHandler
+from application.infrastructure.broker import BaseRabbitBroker
 from application.infrastructure.dispatcher import ExceptionDispatcher
 
 from .config import PaymentConsumerConfig as cfg
@@ -19,16 +20,15 @@ class PaymentConsumer:
     обработчику, а управление ошибками - диспетчеру исключений.
     """
 
-    def __init__(self, connection_url, handler: PaymentHandler, dispatcher: ExceptionDispatcher, stop_event: asyncio.Event):
-        self.connection_url = connection_url
+    def __init__(self, broker: BaseRabbitBroker, handler: PaymentHandler, dispatcher: ExceptionDispatcher, stop_event: asyncio.Event):
+        self.broker = broker
         self.handler = handler
         self.dispatcher = dispatcher
         self._stop_event = stop_event
 
     async def run(self):
         """Точка входа для раннера."""
-        self._connection: AbstractRobustConnection = await aio_pika.connect_robust(self.connection_url)
-        self.channel: AbstractChannel = await self._connection.channel()
+        self.channel: AbstractChannel = self.broker.channel
 
         await self._setup_infrastructure()
         await self.consume()

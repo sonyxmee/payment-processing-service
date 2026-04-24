@@ -3,20 +3,21 @@ import aio_pika
 
 from typing import Optional
 
+from pydantic import AmqpDsn
+
 
 class BaseRabbitBroker:
     """Базовый брокер сообщений RabbitMQ."""
 
-    def __init__(self, connection_url: str):
-        self.connection_url: str = connection_url
+    def __init__(self, connection_url: AmqpDsn):
+        self.connection_url: str = connection_url.unicode_string()
         self.connection: Optional[aio_pika.abc.AbstractRobustConnection] = None
         self.channel: Optional[aio_pika.abc.AbstractChannel] = None
 
     async def connect(self):
         """Открытие соединения и канала."""
         self.connection = await aio_pika.connect_robust(self.connection_url)
-        self.channel = await self.connection.channel()
-        await self.channel.confirm_delivery()
+        self.channel = await self.connection.channel(publisher_confirms=True)
 
     async def close(self):
         """Закрытие соединения."""

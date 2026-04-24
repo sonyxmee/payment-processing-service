@@ -14,16 +14,50 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: payment_rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   app:
     build: .
     container_name: payment_app
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgers_db:5432/${POSTGRES_DB}
+      DATABASE__DSN: ${DATABASE__DSN}
+      RABBITMQ_URL: ${RABBITMQ_URL}
     depends_on:
-      postgers_db:
-        condition: service_healthy
+      postgers_db: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+
+  worker_outbox:
+    build: .
+    container_name: worker_outbox
+    command: ["python", "-m", "workers.outbox"] 
+    env_file: .env
+    depends_on:
+      postgers_db: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+
+  worker_payment:
+    build: .
+    container_name: worker_payment
+    command: ["python",  "-m", "workers.payment"]
+    env_file: .env
+    depends_on:
+      postgers_db: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
 
 volumes:
   postgres_data:

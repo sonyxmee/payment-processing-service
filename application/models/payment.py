@@ -1,4 +1,4 @@
-import enum
+from enum import StrEnum
 
 from sqlalchemy import CheckConstraint, DateTime, Enum, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
@@ -10,13 +10,13 @@ from datetime import datetime
 from .base import Base, BaseMixin, TimestampMixin
 
 
-class PaymentStatus(str, enum.Enum):
+class PaymentStatus(StrEnum):
     PENDING = 'pending'
     SUCCEEDED = 'succeeded'
     FAILED = 'failed'
 
 
-class Currency(str, enum.Enum):
+class Currency(StrEnum):
     RUB = 'RUB'
     USD = 'USD'
     EUR = 'EUR'

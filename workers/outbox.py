@@ -40,16 +40,16 @@ class OutboxWorker(BaseWorker):
 async def main():
     """Точка входа для Outbox воркера."""
 
-    async with RabbitPublisher(settings.rabbitmq_url, exchange_name=EVENTS_EXCHANGE) as publisher:
+    async with RabbitPublisher(settings.rabbitmq_url, exchange_name=EVENTS_EXCHANGE) as broker:
         stop_event = asyncio.Event()
         processor = OutboxProcessor(
             outbox_service=get_outbox_service(),
-            publisher=publisher,
+            broker=broker,
             stop_event=stop_event,
         )
 
         worker = OutboxWorker(
-            broker=publisher,
+            broker=broker,
             processor=processor,
             logger=outbox_logger,
             stop_event=stop_event,

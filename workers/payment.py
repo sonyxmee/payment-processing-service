@@ -10,6 +10,7 @@ from application.core.config import settings
 from application.infrastructure.consumer import PaymentConsumer
 from application.infrastructure.dispatcher import ExceptionDispatcher
 from application.infrastructure.error_handlers import PaymentErrorHandler
+from application.infrastructure.webhook import WebhookClient
 from application.services.dependencies import get_payment_service
 from application.infrastructure.config import PaymentConsumerConfig as cfg
 from application.core.logger import consumer_logger
@@ -59,11 +60,11 @@ async def main():
         error_policy = PaymentErrorHandler(broker.channel, cfg)
         dispatcher = setup_payment_dispatcher(error_policy)
 
-        payment_handler = PaymentHandler(payment_service=get_payment_service())
+        payment_handler = PaymentHandler(service=get_payment_service(), webhook_client=WebhookClient())
 
         stop_event = asyncio.Event()
         consumer = PaymentConsumer(
-            channel=broker.channel,
+            broker=broker,
             handler=payment_handler,
             dispatcher=dispatcher,
             stop_event=stop_event,
