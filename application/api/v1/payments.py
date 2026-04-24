@@ -11,10 +11,7 @@ from application.services.dependencies import get_payment_service
 from application.services.payment import PaymentService
 
 
-router = APIRouter(
-    prefix='/payment',
-    tags=['Payment'],
-)
+router = APIRouter()
 
 
 @router.post(

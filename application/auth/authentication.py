@@ -1,3 +1,5 @@
+import hmac
+
 from argon2.exceptions import InvalidHashError, VerifyMismatchError
 from fastapi import Security
 from fastapi.security import APIKeyHeader
@@ -33,9 +35,17 @@ def verify_api_token(hashed_token: str, plain_token: str) -> None:
 async def authenticate_by_token(api_key: str = Security(api_key_header)) -> str:
     """Аутентификация через токен"""
 
-    verify_api_token(
-        hashed_token=settings.api_key_hash.get_secret_value(),
-        plain_token=api_key,
-    )
+    # В целях упрощения запуска приложения токен хранится в .env в открытом виде.
+    # В реальной среде необходимо использовать хэширование (например, Argon2).
+    expected_token = settings.api_key_hash.get_secret_value()
+
+    # Защита от timing attacks: сравниваем строки за константное время
+    if not hmac.compare_digest(api_key, expected_token):
+        raise UnauthorizedException('Некорректный API токен')
+
+    # verify_api_token(
+    #     hashed_token=settings.api_key_hash.get_secret_value(),
+    #     plain_token=api_key,
+    # )
 
     return AuthContext()

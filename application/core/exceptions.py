@@ -7,19 +7,19 @@ class CoreException(Exception):
     status: str = 'FAIL'
     status_code: int = HTTPStatus.INTERNAL_SERVER_ERROR
     message: str | None = None
-    debug_info: str | None = None
+    result: str | None = None
 
     def __init__(
         self,
         message: str | None = None,
         status_code: int | None = None,
         status: str | None = None,
-        debug_info: str | None = None,
+        result: str | None = None,
     ):
         self.message = message if message is not None else self.message
         self.status_code = status_code if status_code is not None else self.status_code
         self.status = status if status is not None else self.status
-        self.debug_info = debug_info if debug_info is not None else self.debug_info
+        self.result = result if result is not None else self.result
 
     def __str__(self):
         """Строковое представление исключения с сообщением"""

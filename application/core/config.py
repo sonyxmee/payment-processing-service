@@ -42,6 +42,13 @@ class ApplicationSettings(BaseSettings):
     api_key_hash: SecretStr
     rabbitmq_url: AmqpDsn
 
+    # CORS settings
+    cors_origins: set[str] = set()  # список URL, которым разрешен доступ к API
+    cors_allow_credentials: bool = False  # разрешить передачу кук и заголовков авторизации (Authorization headers)
+    cors_allow_methods: set[str] = {'GET'}  # HTTP-методы, разрешенные для запросов (GET, POST, PUT, DELETE и т.д.)
+    cors_allow_headers: set[str] = set()  # список заголовков, которые разрешено передавать в запросе
+    cors_max_age: int = 600  # время кэширования preflight-запроса (OPTIONS) браузером в секундах (600 = 10 минут)
+
     model_config: ClassVar[SettingsConfigDict] = get_basic_settings_config()
 
 
