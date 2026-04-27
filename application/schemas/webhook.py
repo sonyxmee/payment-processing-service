@@ -1,3 +1,5 @@
+import uuid
+
 from enum import Enum
 
 from application.core.schemas.base import BaseIdMixin, BaseSimpleSchema
@@ -11,7 +13,7 @@ class PaymentEventStatus(str, Enum):
 
 
 class PaymentWebhookPayload(BaseSimpleSchema):
-    payment_id: str
+    payment_id: uuid.UUID
     status: PaymentEventStatus
 
 
