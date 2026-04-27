@@ -22,8 +22,8 @@
 
 ### 1. Клонирование репозитория
 ```bash
-git clone <ссылка_на_репозиторий>
-cd payment
+git clone https://github.com/sonyxmee/payment-processing-service.git
+cd payment-processing-service
 ```
 
 ### 2. Подготовка окружения
