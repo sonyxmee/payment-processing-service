@@ -2,7 +2,7 @@ import asyncio
 import logging
 
 from application.core.constants import EVENTS_EXCHANGE
-from application.core.dependencies import get_db_session
+from application.core.dependencies import session_manager
 from application.infrastructure.broker import RabbitPublisher
 from application.processors.outbox import OutboxProcessor
 from application.services.dependencies import get_outbox_service
@@ -34,7 +34,7 @@ class OutboxWorker(BaseWorker):
 
     async def run(self):
         """Запускает цикл обработки сообщений."""
-        await self.processor.run(db_session_factory=get_db_session)
+        await self.processor.run(db_session_factory=session_manager)
 
 
 async def main():

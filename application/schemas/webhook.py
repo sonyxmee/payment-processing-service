@@ -12,3 +12,9 @@ class PaymentEventStatus(str, Enum):
 class PaymentWebhookPayload(BaseModel):
     payment_id: str
     status: PaymentEventStatus
+
+
+class PaymentWebhookSchema(BaseModel):
+    id: int
+    status: str
+    webhook_url: str

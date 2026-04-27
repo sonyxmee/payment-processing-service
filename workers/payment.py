@@ -3,7 +3,7 @@ import logging
 
 from pydantic import ValidationError
 
-from application.core.exceptions import ConflictException, PaymentGatewayException, PaymentWebhookException
+from application.core.exceptions import ConflictException, PaymentNonRetryableException, PaymentWebhookException
 from application.handlers.payment import PaymentHandler
 from application.infrastructure.broker import BaseRabbitBroker
 from application.core.config import settings
@@ -14,6 +14,7 @@ from application.infrastructure.webhook import WebhookClient
 from application.services.dependencies import get_payment_service
 from application.infrastructure.config import PaymentConsumerConfig as cfg
 from application.core.logger import consumer_logger
+from application.core.dependencies import session_manager
 
 from .base import BaseWorker, run_worker
 
@@ -47,7 +48,7 @@ def setup_payment_dispatcher(error_policy: PaymentErrorHandler) -> ExceptionDisp
 
     dispatcher.register(ValidationError, error_policy.handle_validation_error)
     dispatcher.register(ConflictException, error_policy.handle_conflict)
-    dispatcher.register(PaymentGatewayException, error_policy.handle_gateway_error)
+    dispatcher.register(PaymentNonRetryableException, error_policy.handle_payment_error)
     dispatcher.register(PaymentWebhookException, error_policy.handle_webhook_error)
 
     return dispatcher
@@ -60,7 +61,11 @@ async def main():
         error_policy = PaymentErrorHandler(broker.channel, cfg)
         dispatcher = setup_payment_dispatcher(error_policy)
 
-        payment_handler = PaymentHandler(service=get_payment_service(), webhook_client=WebhookClient())
+        payment_handler = PaymentHandler(
+            service=get_payment_service(),
+            webhook_client=WebhookClient(),
+            db_session_factory=session_manager,
+        )
 
         stop_event = asyncio.Event()
         consumer = PaymentConsumer(

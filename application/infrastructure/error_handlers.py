@@ -3,7 +3,7 @@ import aio_pika
 from aio_pika.abc import AbstractChannel, AbstractMessage, FieldValue
 from pydantic import ValidationError
 
-from application.core.exceptions import ConflictException, PaymentGatewayException, PaymentWebhookException
+from application.core.exceptions import ConflictException, PaymentNonRetryableException, PaymentWebhookException
 from application.core.logger import consumer_logger as log
 from application.infrastructure.config import PaymentConsumerConfig
 
@@ -22,8 +22,7 @@ class PaymentErrorHandler:
     async def handle_validation_error(self, message: AbstractMessage, exc: ValidationError):
         """Критическая ошибка данных: отправляем в DLQ и подтверждаем."""
         log.warning(f'Validation error: {exc}. MsgID: {message.message_id}, CorrelationID: {message.headers.get("correlation_id")}')
-        await self._republish_message(message, self.config.DLQ)
-        await message.ack()
+        await self._reject_to_dlq(message)
 
     async def handle_conflict(self, message: AbstractMessage, exc: ConflictException):
         """Конфликт данных в БД: делегируем логику ретраев."""
@@ -32,10 +31,10 @@ class PaymentErrorHandler:
         )
         await self._handle_failure(message)
 
-    async def handle_gateway_error(self, message: AbstractMessage, exc: PaymentGatewayException):
+    async def handle_payment_error(self, message: AbstractMessage, exc: PaymentNonRetryableException):
         """Ошибка стороннего API: делегируем логику ретраев."""
         log.warning(f'Gateway error: {exc}. MsgID: {message.message_id}, CorrelationID: {message.headers.get("correlation_id")}')
-        await self._handle_failure(message)
+        await self._reject_to_dlq(message)
 
     async def handle_webhook_error(self, message: AbstractMessage, exc: PaymentWebhookException):
         """Ошибка при отправке webhook: перенаправляет сообщение в очередь для сбойных вебхуков."""
@@ -47,8 +46,12 @@ class PaymentErrorHandler:
 
     async def handle_unknown(self, message: AbstractMessage, exc: Exception):
         """Fallback для неожиданной ошибки."""
-        log.error(f'Unexpected error: {exc}. MsgID: {message.message_id}, CorrelationID: {message.headers.get("correlation_id")}')
-        await self._republish_message(message, self.config.DLQ)
+        log.exception(f'Unexpected error. MsgID: {message.message_id}, CorrelationID: {message.headers.get("correlation_id")}')
+        await self._reject_to_dlq(message)
+
+    async def _reject_to_dlq(self, message: AbstractMessage):
+        """Перемещает сообщение в очередь DLQ и подтверждает его получение, завершая жизненный цикл в основной очереди."""
+        await self.channel.default_exchange.publish(message, routing_key=self.config.DLQ)
         await message.ack()
 
     async def _handle_failure(self, message: AbstractMessage):

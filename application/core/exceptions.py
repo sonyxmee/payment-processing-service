@@ -79,11 +79,11 @@ class ConflictException(DatabaseException):
     message = 'Ресурс в данный момент заблокирован или изменен'
 
 
-class PaymentGatewayException(CoreException):
-    """Ошибка при взаимодействии с платежным шлюзом."""
+class PaymentNonRetryableException(CoreException):
+    """Ошибка бизнес-логики, которую нельзя исправить повторной обработкой."""
 
-    status_code = HTTPStatus.FAILED_DEPENDENCY
-    message = 'Ошибка взаимодействия с платежным шлюзом'
+    status_code = HTTPStatus.UNPROCESSABLE_ENTITY
+    message = 'Невозможно обработать платеж: критическая ошибка данных'
 
 
 class PaymentWebhookException(CoreException):

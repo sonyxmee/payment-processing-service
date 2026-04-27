@@ -22,7 +22,7 @@ class BaseService(ABC):
 
     async def create(self, payload: SchemaT, db_session: AsyncSession) -> ModelT:
         """Метод создания записи"""
-        return await self.repository.create(schema=payload, db_session=db_session)
+        return await self.repository.create(payload=payload, db_session=db_session)
 
     async def update(self, id_: int, payload: SchemaT, db_session: AsyncSession) -> ModelT:
         """Метод обновления записи"""

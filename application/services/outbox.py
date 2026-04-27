@@ -42,7 +42,7 @@ class OutboxEventService(BaseService):
             processed_at=datetime.now(timezone.utc),
             error=None,
         )
-        await self.repository.update(db_session, event_id, update_data)
+        await self.repository.update(id_=event_id, payload=update_data, db_session=db_session)
 
     async def mark_as_failed(self, event_id: UUID, error_msg: str, db_session: AsyncSession):
         """Ошибка: увеличивает счетчик попыток и сохраняет текст ошибки."""

@@ -1,11 +1,12 @@
 import asyncio
 
-from typing import Callable, Sequence
+from typing import Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.core.constants import OUTBOX_RETRY_LIMIT
 from application.core.logger import outbox_logger as log
 from application.models.outbox import OutboxEvent
+from application.orm.session import DatabaseSessionManager
 from application.services.outbox import OutboxEventService
 
 from .protocols import MessageBroker
@@ -21,7 +22,7 @@ class OutboxProcessor:
         self._stop_event = stop_event
         self.max_attempts = OUTBOX_RETRY_LIMIT
 
-    async def run(self, db_session_factory: Callable):
+    async def run(self, db_session_factory: DatabaseSessionManager):
         """Запускает основной цикл обработки событий. Выполняется до получения сигнала остановки."""
 
         log.info('Outbox Processor started.')
@@ -34,9 +35,9 @@ class OutboxProcessor:
                 log.critical(f'Infrastructure or database error: {e}', exc_info=True)
                 await asyncio.sleep(5)
 
-    async def _run_iteration(self, db_session_factory: Callable):
+    async def _run_iteration(self, db_session_factory: DatabaseSessionManager):
         """Выполняет одну итерацию обработки событий."""
-        async with db_session_factory() as db_session:
+        async with db_session_factory.session() as db_session:
             events: Sequence[OutboxEvent] = await self.service.get_pending_events(db_session=db_session, limit=10)
 
             if not events:
@@ -56,11 +57,11 @@ class OutboxProcessor:
     async def _process_event(self, event: OutboxEvent, db_session: AsyncSession):
         """Выполняет отправку события в брокер и обновление статуса."""
         try:
-            await self.broker.send(event.event_type, event.payload)
+            await self.broker.publish(event.event_type, event.payload)
             await self.service.mark_as_processed(event_id=event.id, db_session=db_session)
             log.info(f'Event {event.id} sent and marked.')
         except Exception as e:
-            log.error(f'Failed to process event {event.id}: {e}')
+            log.exception(f'Failed to process event {event.id}: {e}')
             await self.handle_failure(event=event, exception=e, db_session=db_session)
 
     async def handle_failure(self, event: OutboxEvent, exception: Exception, db_session: AsyncSession):

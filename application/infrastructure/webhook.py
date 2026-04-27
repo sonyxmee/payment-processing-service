@@ -1,6 +1,5 @@
 import httpx
 
-from typing import Any
 from tenacity import (
     retry,
     stop_after_attempt,
@@ -9,6 +8,7 @@ from tenacity import (
 )
 
 from application.core.logger import consumer_logger as log
+from application.schemas.webhook import PaymentWebhookPayload
 
 
 class WebhookClient(httpx.AsyncClient):
@@ -25,7 +25,7 @@ class WebhookClient(httpx.AsyncClient):
         retry=retry_if_exception_type((httpx.ConnectError, httpx.ReadTimeout, httpx.HTTPStatusError)),
         reraise=True,
     )
-    async def send_notification(self, url: str, payload: dict[str, Any]) -> None:
+    async def send_notification(self, url: str, payload: PaymentWebhookPayload) -> None:
         """Отправляет POST-запрос с автоматическим повтором при 5xx и сетевых ошибках."""
         response: httpx.Response = await self.post(url, json=payload)
 

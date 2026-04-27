@@ -1,3 +1,4 @@
+from uuid import UUID
 from typing import Annotated
 from fastapi import APIRouter, Depends, Path, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -43,7 +44,7 @@ async def create_payment(
     response_model_exclude_none=True,
 )
 async def get_record_by_id(
-    object_id: Annotated[int, Path(description='Идентификатор платежа')],
+    object_id: Annotated[UUID, Path(description='Идентификатор платежа')],
     service: Annotated[PaymentService, Depends(get_payment_service)],
     db_session: Annotated[AsyncSession, Depends(get_db_session, scope='function')],
     auth: Annotated[AuthContext, Depends(authenticate_by_token)],

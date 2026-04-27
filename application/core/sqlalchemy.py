@@ -145,6 +145,7 @@ class DBExceptionHandler:
 
     async def _handle_dbapi_error(self, exc: DBAPIError):
         """Обрабатывает низкоуровневые ошибки драйвера БД."""
+        log.exception('Database Error occurred')
 
         lock: ErrorDetail | None = SQLAlchemyErrorHandler.parse_lock_contention(exc)
         if lock:
@@ -159,7 +160,6 @@ class DBExceptionHandler:
         if error:
             raise DatabaseException.from_message(f'"{self.model_name}": {error.message}')
 
-        log.error('Database API Error', extra={**self.log_context, 'orig_error': error_msg, 'pgcode': getattr(exc.orig, 'pgcode', None)})
         raise DatabaseException.from_message('Техническая ошибка выполнения запроса') from exc
 
 
