@@ -33,7 +33,7 @@ class PaymentErrorHandler:
 
     async def handle_payment_error(self, message: AbstractMessage, exc: PaymentNonRetryableException):
         """Ошибка стороннего API: делегируем логику ретраев."""
-        log.warnexceptioning(f'Gateway error: {exc}. MsgID: {message.message_id}, CorrelationID: {message.headers.get("correlation_id")}')
+        log.exception(f'Gateway error: {exc}. MsgID: {message.message_id}, CorrelationID: {message.headers.get("correlation_id")}')
         await self._reject_to_dlq(message)
 
     async def handle_webhook_error(self, message: AbstractMessage, exc: PaymentWebhookException):
