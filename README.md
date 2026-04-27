@@ -36,15 +36,20 @@ cp .env.example .env
 ### 3. Запуск инфраструктуры
 Для развертывания всех сервисов (API, Consumer, PostgreSQL, RabbitMQ) используйте Docker Compose:
 ```bash
-docker-compose up --build -d
+docker compose up --build -d
 ```
 
 ### 4. Применение миграций
 Примените миграции базы данных, чтобы создать структуру таблиц:
 ```bash
-docker-compose exec api alembic upgrade head
+docker compose exec app alembic upgrade head
 ```
 *Сервис будет доступен по адресу `http://localhost:8000`.*
+
+## Документация API
+После запуска приложения автоматически генерируется интерактивная документация:
+* **Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs)
+* **Redoc**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
 
 ---
 
