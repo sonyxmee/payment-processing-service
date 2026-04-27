@@ -23,7 +23,7 @@ def verify_api_token(hashed_token: str, plain_token: str) -> None:
     try:
         verify_hash(hashed_token=hashed_token, plain_token=plain_token)
     except VerifyMismatchError:
-        raise UnauthorizedException('Некорректный API токен')
+        raise UnauthorizedException('Некорректный API токен. В заголовке запроса укажите токен с ключом "X-API-Key".')
     except InvalidHashError as exception:
         user_message = 'Не удалось проверить доступ к ресурсу из-за неверных настроек приложения.'
         raise InternalException(user_message) from exception
@@ -41,7 +41,7 @@ async def authenticate_by_token(api_key: str = Security(api_key_header)) -> str:
 
     # Защита от timing attacks: сравниваем строки за константное время
     if not hmac.compare_digest(api_key, expected_token):
-        raise UnauthorizedException('Некорректный API токен')
+        raise UnauthorizedException('Некорректный API токен. В заголовке запроса укажите токен с ключом "X-API-Key".')
 
     # verify_api_token(
     #     hashed_token=settings.api_key_hash.get_secret_value(),
