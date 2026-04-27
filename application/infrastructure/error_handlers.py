@@ -21,24 +21,24 @@ class PaymentErrorHandler:
 
     async def handle_validation_error(self, message: AbstractMessage, exc: ValidationError):
         """Критическая ошибка данных: отправляем в DLQ и подтверждаем."""
-        log.warning(f'Validation error: {exc}. MsgID: {message.message_id}, CorrelationID: {message.headers.get("correlation_id")}')
+        log.exception(f'Validation error: {exc}. MsgID: {message.message_id}, CorrelationID: {message.headers.get("correlation_id")}')
         await self._reject_to_dlq(message)
 
     async def handle_conflict(self, message: AbstractMessage, exc: ConflictException):
         """Конфликт данных в БД: делегируем логику ретраев."""
-        log.warning(
+        log.exception(
             f'Conflict detected: {exc}, retrying... MsgID: {message.message_id}, CorrelationID: {message.headers.get("correlation_id")}'
         )
         await self._handle_failure(message)
 
     async def handle_payment_error(self, message: AbstractMessage, exc: PaymentNonRetryableException):
         """Ошибка стороннего API: делегируем логику ретраев."""
-        log.warning(f'Gateway error: {exc}. MsgID: {message.message_id}, CorrelationID: {message.headers.get("correlation_id")}')
+        log.warnexceptioning(f'Gateway error: {exc}. MsgID: {message.message_id}, CorrelationID: {message.headers.get("correlation_id")}')
         await self._reject_to_dlq(message)
 
     async def handle_webhook_error(self, message: AbstractMessage, exc: PaymentWebhookException):
         """Ошибка при отправке webhook: перенаправляет сообщение в очередь для сбойных вебхуков."""
-        log.error(
+        log.exception(
             f'Webhook delivery failed: {exc}. MsgID: {message.message_id}, CorrelationID: {message.headers.get("correlation_id")}, Error: {exc}'
         )
         await self.channel.default_exchange.publish(message, routing_key=self.config.WEBHOOKS_DLQ)
