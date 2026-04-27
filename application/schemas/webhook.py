@@ -1,5 +1,6 @@
 from enum import Enum
-from pydantic import BaseModel
+
+from application.core.schemas.base import BaseSimpleSchema
 
 
 class PaymentEventStatus(str, Enum):
@@ -9,12 +10,12 @@ class PaymentEventStatus(str, Enum):
     FAILED = 'failed'
 
 
-class PaymentWebhookPayload(BaseModel):
+class PaymentWebhookPayload(BaseSimpleSchema):
     payment_id: str
     status: PaymentEventStatus
 
 
-class PaymentWebhookSchema(BaseModel):
+class PaymentWebhookSchema(BaseSimpleSchema):
     id: int
     status: str
     webhook_url: str
