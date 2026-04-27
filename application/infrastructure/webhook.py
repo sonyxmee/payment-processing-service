@@ -27,7 +27,7 @@ class WebhookClient(httpx.AsyncClient):
     )
     async def send_notification(self, url: str, payload: PaymentWebhookPayload) -> None:
         """Отправляет POST-запрос с автоматическим повтором при 5xx и сетевых ошибках."""
-        response: httpx.Response = await self.post(url, json=payload)
+        response: httpx.Response = await self.post(url, json=payload.model_dump_json())
 
         if response.is_error:
             if response.is_server_error:
