@@ -1,6 +1,6 @@
 from enum import Enum
 
-from application.core.schemas.base import BaseSimpleSchema
+from application.core.schemas.base import BaseIdMixin, BaseSimpleSchema
 
 
 class PaymentEventStatus(str, Enum):
@@ -15,7 +15,6 @@ class PaymentWebhookPayload(BaseSimpleSchema):
     status: PaymentEventStatus
 
 
-class PaymentWebhookSchema(BaseSimpleSchema):
-    id: int
+class PaymentWebhookSchema(BaseSimpleSchema, BaseIdMixin):
     status: str
     webhook_url: str
